@@ -1,0 +1,300 @@
+#bits.h
+
+#if !defined(BITS_H)
+#define BITS_H
+extern void setBitAt( unsigned int * bitmap, int i, int bitValue);
+extern int getBitAt( unsigned int bitmap, unsigned int i);
+extern int countBits( unsigned int bitmap, unsigned int bitValue);
+extern int maxContinuousOnes(unsigned int bitmap, int * position);
+extern void printBits(unsigned int bitmap);
+#endif
+
+
+#---------------------
+#bits.c
+
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <math.h>
+// It prints the bits in bitmap as 0s and 1s.
+void printBits(unsigned int bitmap)
+{
+        // Add your code here
+        int array[32];
+        for(int i = 0; i < 32; i++){
+                array[i] = bitmap%2;
+                bitmap = bitmap/2;
+        }
+        for(int j = 31; j >=0; j--){
+                printf("%d", array[j]);
+        }
+        printf("\n");
+        printf("10987654321098765432109876543210\n");
+}
+// Sets the ith bit in *bitmap with the value in bitValue (0 or 1)
+void setBitAt( unsigned int *bitmap, int i, int bitValue ) {
+        // Add your code here
+        unsigned int bitmask = (1<<i);
+        if(bitValue){
+                *bitmap = (*bitmap|bitmask);
+        }else{
+                bitmask = ~bitmask;
+                *bitmap = (*bitmap&bitmask);
+        }
+}
+// It returns the bit value (0 or 1) at bit i
+int getBitAt( unsigned int bitmap, unsigned int i) {
+        // Add your code here
+        unsigned int bitmask = (1<<i);
+        unsigned int check = (bitmap&bitmask);
+        if(check>0){
+                return 1;
+        }else{
+                return 0;
+        }
+}
+// It returns the number of bits with a value "bitValue".
+// if bitValue is 0, it returns the nu+-mber of 0s. If bitValue is 1, it returns the number of 1s.
+int countBits( unsigned int bitmap, unsigned int bitValue) {
+        // Add your code here
+        int count = 0;
+        int array[32];
+        for(int i = 0; i < 32; i++){
+                array[i] = bitmap%2;
+                bitmap = bitmap/2;
+        }
+        if(bitValue==0){
+                for(int j = 0; j < 32; j++){
+                        if(array[j]==0){
+                                count++;
+                        }
+                }
+        }else{
+                for(int j = 0; j < 32; j++){
+                        if(array[j]==1){
+                                count++;
+                        }
+                }
+        }
+        return count;
+}
+// It returns the number of largest consecutive 1s in "bitmap".
+// Set "*position" to the beginning bit index of the sequence.
+int maxContinuousOnes(unsigned int bitmap, int * position) {
+        // Add your code here
+        int array[32];
+        for(int i = 0; i < 32; i++){
+                array[i] = bitmap%2;
+                bitmap = bitmap/2;
+        }
+        int firstIndex[32];
+        int k = 0;
+        int counts[32];
+        int m = 0;
+        for(int j = 31; j >=0; j--){
+                if(array[j]==1){
+                        firstIndex[k++]=j;
+                        int l = j;
+                        int tempCount = 1;
+                        for(l; l >=0; l--){
+                                if(array[l]==1){
+                                        tempCount++;
+                                }else{
+                                        break;
+                                }
+                        }
+                        counts[m++]=tempCount;
+                        j = l+1;
+                }
+        }
+        int maxCount = counts[0];
+        int index = 0;
+        for(int n = 0; n < 32; n++){
+                if(counts[n]>maxCount){
+                        maxCount = counts[n];
+                        index = n;
+                }
+        }
+        *position = firstIndex[index] - (maxCount) + 2;
+        return (maxCount-1);
+}
+
+
+#------------------------------
+#convert.c
+
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <math.h>
+int power(int x, int y){
+        for(int i = y-1; i >=0; i--){
+                x = x*y;
+        }
+        return x;
+}
+void convert(int basefrom, int baseto, char *numstr){
+        int tempDecimal = 0;
+        int numlen = strlen(numstr);
+        printf("Number read in base %d: %s\n", basefrom, numstr);
+        if(basefrom==10){
+                if(baseto==10){
+                        printf("Converted to base 10: %s\n", numstr);
+                        printf("Converted to base 10: %s\n", numstr);
+                }else{
+                        int num = atoi(numstr);
+                        int resultLen = 0;
+                        int temp = num;
+                        while((temp/baseto)>0){
+                                resultLen++;
+                                temp = temp/baseto;
+                        }
+                        resultLen++;
+                        int array[resultLen];
+                        for(int i = 0; i < resultLen; i++){
+                                array[i] = num%baseto;
+                                num = num/baseto;
+                        }
+                        char *result = (char *)malloc(resultLen*sizeof(char));
+                        int k = 0;
+                        for(int j = resultLen-1; j>=0; j--){
+                                switch(array[j]){
+                                        case 0: *(result+k) = '0'; break;
+                                        case 1: *(result+k) = '1'; break;
+                                        case 2: *(result+k) = '2'; break;
+                                        case 3: *(result+k) = '3'; break;
+                                        case 4: *(result+k) = '4'; break;
+                                        case 5: *(result+k) = '5'; break;
+                                        case 6: *(result+k) = '6'; break;
+                                        case 7: *(result+k) = '7'; break;
+                                        case 8: *(result+k) = '8'; break;
+                                        case 9: *(result+k) = '9'; break;
+                                        case 10: *(result+k) = 'A'; break;
+                                        case 11: *(result+k) = 'B'; break;
+                                        case 12: *(result+k) = 'C'; break;
+                                        case 13: *(result+k) = 'D'; break;
+                                        case 14: *(result+k) = 'E'; break;
+                                        case 15: *(result+k) = 'F'; break;
+                                        case 16: *(result+k) = 'G'; break;
+                                        case 17: *(result+k) = 'H'; break;
+                                        case 18: *(result+k) = 'I'; break;
+                                        case 19: *(result+k) = 'J'; break;
+                                        case 20: *(result+k) = 'K'; break;
+                                        case 21: *(result+k) = 'L'; break;
+                                        case 22: *(result+k) = 'M'; break;
+                                        case 23: *(result+k) = 'N'; break;
+                                        case 24: *(result+k) = 'O'; break;
+                                }
+                                k++;
+                        }
+                        printf("Converted to base 10: %s\n", numstr);
+                        printf("Converted to base %d: %s\n", baseto, result);
+                }
+        }else if((basefrom>=2) && (basefrom<=25)){
+                int power = 0;
+                int tempDecimal = 0;
+                for(int i = numlen-1; i>=0; i--){
+                        int digit = 0;
+                        switch(numstr[i]){
+                                        case '0' : digit = 0; break;
+                                        case '1' : digit = 1; break;
+                                        case '2' : digit = 2; break;
+                                        case '3' : digit = 3; break;
+                                        case '4' : digit = 4; break;
+                                        case '5' : digit = 5; break;
+                                        case '6' : digit = 6; break;
+                                        case '7' : digit = 7; break;
+                                        case '8' : digit = 8; break;
+                                        case '9' : digit = 9; break;
+                                        case 'A' : digit = 10; break;
+                                        case 'B' : digit = 11; break;
+                                        case 'C' : digit = 12; break;
+                                        case 'D' : digit = 13; break;
+                                        case 'E' : digit = 14; break;
+                                        case 'F' : digit = 15; break;
+                                        case 'G' : digit = 16; break;
+                                        case 'H' : digit = 17; break;
+                                        case 'I' : digit = 18; break;
+                                        case 'J' : digit = 19; break;
+                                        case 'K' : digit = 20; break;
+                                        case 'L' : digit = 21; break;
+                                        case 'M' : digit = 22; break;
+                                        case 'N' : digit = 23; break;
+                                        case 'O' : digit = 24; break;
+                        }
+                        if(digit>=basefrom){
+                                printf("Wrong digit in number.\n");
+                                exit(1);
+                        }
+                        tempDecimal = tempDecimal + digit*pow(basefrom, power);
+                        power++;
+                }
+                if(baseto==10){
+                        printf("Converted to base 10: %d\n", tempDecimal);
+                        printf("Converted to base 10: %d\n", tempDecimal);
+                }else if((baseto>=2) && (baseto<=25)){
+                        int resultLen = 0;
+                        int temp = tempDecimal;
+                        while((temp/baseto)>0){
+                                resultLen++;
+                                temp = temp/baseto;
+                        }
+                        temp = tempDecimal;
+                        resultLen++;
+                        int array[resultLen];
+                        for(int i = 0; i < resultLen; i++){
+                                array[i] = temp%baseto;
+                                temp = temp/baseto;
+                        }
+                        char *result = (char *)malloc(resultLen*sizeof(char));
+                        int k = 0;
+                        for(int j = resultLen-1; j>=0; j--){
+                                switch(array[j]){
+                                        case 0: *(result+k) = '0'; break;
+                                        case 1: *(result+k) = '1'; break;
+                                        case 2: *(result+k) = '2'; break;
+                                        case 3: *(result+k) = '3'; break;
+                                        case 4: *(result+k) = '4'; break;
+                                        case 5: *(result+k) = '5'; break;
+                                        case 6: *(result+k) = '6'; break;
+                                        case 7: *(result+k) = '7'; break;
+                                        case 8: *(result+k) = '8'; break;
+                                        case 9: *(result+k) = '9'; break;
+                                        case 10: *(result+k) = 'A'; break;
+                                        case 11: *(result+k) = 'B'; break;
+                                        case 12: *(result+k) = 'C'; break;
+                                        case 13: *(result+k) = 'D'; break;
+                                        case 14: *(result+k) = 'E'; break;
+                                        case 15: *(result+k) = 'F'; break;
+                                        case 16: *(result+k) = 'G'; break;
+                                        case 17: *(result+k) = 'H'; break;
+                                        case 18: *(result+k) = 'I'; break;
+                                        case 19: *(result+k) = 'J'; break;
+                                        case 20: *(result+k) = 'K'; break;
+                                        case 21: *(result+k) = 'L'; break;
+                                        case 22: *(result+k) = 'M'; break;
+                                        case 23: *(result+k) = 'N'; break;
+                                        case 24: *(result+k) = 'O'; break;
+                                }
+                                k++;
+                        }
+                        printf("Converted to base 10: %d\n", tempDecimal);
+                        printf("Converted to base %d: %s\n", baseto, result);
+                }
+        }
+
+}
+void main(int argc, char ** argv){
+        if(argc<4){
+                printf("Usage:  convert <basefrom> <baseto> <number>\n");
+                exit(1);
+        }
+        int basefrom = atoi(argv[1]);
+        int baseto = atoi(argv[2]);
+        char *numstr = argv[3];
+        convert(basefrom, baseto, numstr);
+}
+
