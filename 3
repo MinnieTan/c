@@ -1,0 +1,473 @@
+#nextword.h
+
+#include <stdio.h>
+// It returns the next word from stdin.
+// If there are no more more words it returns NULL. 
+extern char * nextword(FILE * fd);
+
+
+#------------------------------------
+#nextword.c
+
+#include <stdio.h>
+#include <stdlib.h>
+//
+// Separates the file into words
+//
+#define MAXWORD 200
+char word[MAXWORD];
+int wordLength;
+// It returns the next word from fd.
+// If there are no more more words it returns NULL. 
+char * nextword(FILE * fd) {
+        int c;
+        wordLength = 0;
+        // While it is not EOF read char
+                // While it is not EOF and it is a non-space char
+                // store character in word.
+                // if char is not in word return word so far.
+                //
+        // Return null if there are no more words
+        while((c=fgetc(fd))!= -1){
+                if(c != ' ' && c != '\n' && c != '\t' && c != '\r'){
+                        word[wordLength] = c;
+                        wordLength++;
+                }else{
+                        if(wordLength != 0){
+                                word[wordLength] = '\0';
+                                return word;
+                        }
+                }
+        }
+        if(wordLength != 0){
+                return word;
+        }
+        return NULL;
+}
+
+
+#------------------------
+#countlines.c
+
+#include <stdio.h>
+#include <stdlib.h>
+int main(int argc, char ** argv) {
+        int c;
+        int lines=0;
+        // Add your implementation here
+        char * fileName = argv[1];
+        FILE * fd = fopen(fileName, "r");
+        if (fd == NULL) {
+          printf("Could not open file %s\n", fileName);
+          exit(1);
+        }else{
+                while ((c=fgetc(fd))!= -1) {
+                        if(c == '\n'){
+                                lines++;
+                        }
+                }
+                printf("Program that counts lines.\n");
+                printf("Total lines: %d\n", lines);
+        }
+        exit(0);
+}
+
+
+#--------------------
+#rpncalc.c
+
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include "stack.h"
+#include "nextword.h"
+#include "rpn.h"
+int main(int argc, char ** argv)
+{
+  printf("RPN Calculator.\n");
+  if (argc < 2) {
+    printf("Usage: rpncalc filename [xvalue]\n");
+    exit(1);
+  }
+  // Get file from first argument.
+  char * fileName = argv[1];
+  // Check if there is an x value passed as parameter
+  double x = 0;
+  if ( argc > 2) {
+    sscanf(argv[2],"%lf", &x);
+  }
+  double result = rpn_eval(fileName,x);
+  printf("Result: %lf\n", result);
+}
+
+
+#--------------------
+#plot.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "rpn.h"
+#define MAXCOLS 80
+#define MAXROWS 40
+char plot[MAXROWS][MAXCOLS];
+void clearPlot()
+{
+  for (int i = 0; i < MAXROWS; i++) {
+    for (int j = 0; j < MAXCOLS; j++) {
+      plot[i][j] = ' ';
+    }
+  }
+}
+void printPlot()
+{
+  for (int i = 0; i < MAXROWS; i++) {
+    for (int j = 0; j < MAXCOLS; j++) {
+      printf("%c", plot[i][j]);
+    }
+    printf("\n");
+  }
+}
+void plotXY(int x, int y, char c) {
+  if ( x <0 || x>=MAXCOLS || y < 0 || y >=MAXROWS) return;
+  plot[y][x]=c;
+}
+void createPlot( char * funcFile, double minX, double maxX) {
+  int nvals = MAXCOLS;
+  double yy[MAXCOLS];
+  double xx[MAXCOLS];
+  clearPlot();
+  // Evaluate function and store in vector yy
+  for(int i = 0; i < MAXCOLS; i++){
+        double x = minX + (maxX-minX) * i / MAXCOLS;
+        double y = rpn_eval(funcFile,x);
+        y = -y;
+        xx[i] = x;
+        yy[i] = y;
+  }
+  //Compute maximum and minimum y in vector yy
+  double minY;
+  double maxY;
+  for(int j = 0; j < MAXCOLS; j++){
+        if(yy[j] < minY){
+                minY = yy[j];
+                continue;
+        }else if(yy[j] > maxY){
+                maxY = yy[j];
+                continue;
+        }
+  }
+  //Plot x axis
+  for(int k = 0; k < MAXCOLS; k++){
+        plotXY(k, MAXROWS / 2, '_');
+  }
+  //Plot y axis
+  for(int l = 0; l <= MAXROWS; l++ ){
+        plotXY(MAXCOLS / 2, l, '|');
+  }
+  // Plot function. Use scaling.
+  // minX is plotted at column 0 and maxX is plotted ar MAXCOLS-1
+  // minY is plotted at row 0 and maxY is plotted at MAXROWS-1
+  for(int i = 0; i < MAXCOLS; i++){
+        int x = i;
+        int y =  (int) ((yy[i] - minY) * MAXROWS / (maxY - minY));
+        plotXY(x, y, '*');
+  }
+  printPlot();
+}
+
+int main(int argc, char ** argv)
+{
+  printf("RPN Plotter.\n");
+  if (argc < 4) {
+    printf("Usage: plot func-file xmin xmax\n");
+    exit(1);
+  }
+  // Get arguments
+  char *funcName = argv[1];
+  double xmin = atof(argv[2]);
+  double xmax = atof(argv[3]);
+  createPlot(funcName, xmin, xmax);
+}
+
+
+#--------------------------------------
+#toascii.c
+
+#include <stdlib.h>
+#include <stdio.h>
+int
+main(int argc, char ** argv) {
+        int c;
+        printf("Program that prints the ascii values of the characters in a file\n");
+        if (argc < 2) {
+          printf("Usage: toascii filename\n");
+          exit(1);
+        }
+        // Get file from first argument.
+        char * fileName = argv[1];
+        FILE * fd = fopen(fileName, "r");
+        if (fd == NULL) {
+          printf("Could not open file %s\n", fileName);
+          exit(1);
+        }
+        // Iterate over all characters in file and pront them
+        while ((c=fgetc(fd))!=-1) {
+                printf("<%c,%d>\n",c,c);
+        }
+        fclose(fd);
+}
+
+
+#----------------------
+#rpn.h
+
+#include <stdio.h>
+double rpn_eval(char * fileName, double x);
+
+
+#----------------------------------------------
+#rpn.c
+
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <math.h>
+#include "rpn.h"
+#include "nextword.h"
+#include "stack.h"
+double rpn_eval(char * fileName, double x) {
+        double a, b, c;
+        FILE *fd;
+        fd = fopen(fileName, "r");
+        char * word;
+        while (word = nextword(fd)) {
+                if(word[0] == '0' || word[0] == '1' || word[0] == '2' || word[0] == '3' || word[0] == '4' || word[0] == '5' || word[0] == '6' || word[0] == '7' || word[0] == '8' || word[0] == '9'){
+                        double val;
+                        val = atof(word);
+                        stack_push(val);
+                }else if(word[0] == '-'){
+                        if(word[1] == '0' || word[1] == '1' || word[1] == '2' || word[1] == '3' || word[1] == '4' || word[1] == '5' || word[1] == '6' || word[1] == '7' || word[1] == '8' || word[1] == '9'){
+                        double val;
+                        val = atof(word);
+                        stack_push(val);
+                        }else{
+                                a = stack_pop();
+                                b = stack_pop();
+                                if (a == 0.000000 || b == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                                }else{
+                                        c = b-a;
+                                        stack_push(c);
+                                }
+                        }
+                }else if(word[0] == '+'){
+                        a = stack_pop();
+                        b = stack_pop();
+                        if (a == 0.000000 || b == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = a + b;
+                                stack_push(c);
+                        }
+                }else if(word[0] == '*'){
+                        a = stack_pop();
+                        b = stack_pop();
+                        if (a == 0.000000 || b == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = a*b;
+                                stack_push(c);
+                        }
+                }else if(word[0] == '/'){
+                        a = stack_pop();
+                        b = stack_pop();
+                        if (a == 0.000000 || b == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = (double)b/a;
+                                stack_push(c);
+                        }
+                }else if(word[0] == 's'){
+                        a = stack_pop();
+                        c = (double)sin(a);
+                        stack_push(c);
+                }else if(word[0] == 'c'){
+                        a = stack_pop();
+                        if (a == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = (double)cos(a);
+                                stack_push(c);
+                        }
+                }else if(word[0] == 'p'){
+                        a = stack_pop();
+                        b = stack_pop();
+                        c = (double)pow(b,a);
+                        stack_push(c);
+                }else if(word[0] == 'e'){
+                        a = stack_pop();
+                        if (a == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = (double)exp(a);
+                                stack_push(c);
+                        }
+                }else if(word[0] == 'x'){
+                        stack_push(x);
+                }else if(word[0] == 'l'){
+                        a = stack_pop();
+                        if (a == 0.000000){
+                                printf("Stack underflow\n");
+                                exit(1);
+                        }else{
+                                c = (double)log(a);
+                                stack_push(c);
+                        }
+                }
+        }
+        double result;
+        result = stack_pop();
+        double check = stack_pop();
+        if(check != 0.000000){
+                printf("Elements remain in the stack\n");
+                exit(1);
+        }
+        return result;
+}
+
+
+#----------------------------------------------
+#stack.h
+
+
+#define MAXSTACK 100
+extern void stack_clear();
+extern double stack_pop();
+extern void stack_push(double val);
+extern void stack_print();
+extern int stack_top();
+extern int stack_max();
+extern int stack_is_empty();
+
+
+#----------------------------------------------
+#stack.c
+
+void stack_clear() {
+  top = 0;
+}
+double stack_pop(){
+        // Add implementation here
+        double pop;
+        if(top > 0){
+                pop = stack[top - 1];
+                stack[top - 1] = 0.000000;
+                top--;
+        }else if(top == 0){
+                pop = stack[0];
+                stack[0] = 0.000000;
+        }
+        //printf("pop %lf\n", pop);
+        return pop;
+}
+void stack_push(double val){
+        // Add implementation here
+        stack[top] = val;
+        top++;
+        //printf("push %lf\n", val);
+}
+void stack_print(){
+        printf("Stack:\n");
+        int j = 0;
+        while(stack[j] != 0.000000){
+                printf("%d: %lf\n", j, stack[j]);
+                j++;
+        }
+        if(stack[0] == 0.000000 && top == 0.000000){
+                printf("Stack is empty");
+        }
+}
+int stack_top(){
+  return top;
+}
+int stack_max(){
+  return MAXSTACK;
+}
+int stack_is_empty(){
+        return top == 0;
+}
+
+
+#---------------------------
+#test_stack.c
+
+
+#include <stdio.h>
+#include "stack.h"
+
+int
+main()
+{
+  stack_clear();
+  printf("Pushing values...\n");
+  stack_push(5);
+  stack_push(9);
+  stack_push(2);
+  stack_push(3);
+  stack_print();
+  printf("Pop values...\n");
+  double x = stack_pop();
+  double y = stack_pop();
+  printf("x=%lf y=%lf\n", x, y);
+  stack_print();
+  printf("top=%d max=%d\n", stack_top(), stack_max());
+  printf("isempty=%d", stack_is_empty());
+  printf("Pop values...\n");
+  stack_pop();
+  stack_pop();
+  stack_print();
+  printf("top=%d max=%d\n", stack_top(), stack_max());
+  printf("isempty=%d", stack_is_empty());
+}
+
+
+#---------------------------
+#towords.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "nextword.h"
+int main(int argc, char ** argv) {
+        printf("Program that separates text to words.\n");
+        if (argc < 2) {
+          printf("Usage: towords filename\n");
+          exit(1);
+        }
+        // Get file from first argument.
+        char * fileName = argv[1];
+        FILE * fd = fopen(fileName, "r");
+        if (fd == NULL) {
+          printf("Could not open file %s\n", fileName);
+          exit(1);
+        }
+        char * w;
+        int wordCount = 0;
+        while ( (w = nextword(fd)) != NULL) {
+          printf("%d: %s\n", wordCount, w);
+          wordCount++;
+        }
+        printf("words total = %d\n", wordCount);
+        fclose(fd);
+        exit(0);
+}
+
+
