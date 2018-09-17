@@ -1,0 +1,443 @@
+#LinkedList.h
+// Data structs for a list of ints
+struct ListNode {
+        int value;
+        struct ListNode * next;
+};
+typedef struct ListNode ListNode;
+struct LinkedList {
+        ListNode * head;
+};
+typedef struct LinkedList LinkedList;
+void llist_init(LinkedList * list);
+void llist_print(LinkedList * list);
+void llist_add(LinkedList * list, int value);
+int llist_exists(LinkedList * list, int value);
+int llist_remove(LinkedList * list, int value);
+int llist_get_ith(LinkedList * list, int ith, int *value);
+int llist_remove_ith(LinkedList * list, int ith);
+int llist_number_elements(LinkedList * list);
+int llist_save(LinkedList * list, char * file_name);
+int llist_read(LinkedList * list, char * file_name);
+void llist_sort(LinkedList * list, int ascending);
+void llist_clear(LinkedList *list);
+int llist_remove_first(LinkedList * list, int * value);
+int llist_remove_last(LinkedList * list, int * value);
+void llist_insert_first(LinkedList * list, int value);
+void llist_insert_last(LinkedList * list, int value);
+
+#----------------------
+#LinkedList.c
+
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "LinkedList.h"
+//
+// Initialize a linked list
+//
+void llist_init(LinkedList * list)
+{
+        list->head = NULL;
+}
+//
+// It prints the elements in the list in the form:
+// 4, 6, 2, 3, 8,7
+//
+void llist_print(LinkedList * list) {
+        ListNode * e;
+        if (list->head == NULL) {
+                printf("{EMPTY}\n");
+                return;
+        }
+        printf("{");
+        e = list->head;
+        while (e != NULL) {
+                printf("%d", e->value);
+                e = e->next;
+                if (e!=NULL) {
+                        printf(", ");
+                }
+        }
+        printf("}\n");
+}
+//
+// Appends a new node with this value at the beginning of the list
+//
+void llist_add(LinkedList * list, int value) {
+        // Create new node
+        ListNode * n = (ListNode *) malloc(sizeof(ListNode));
+        n->value = value;
+
+        // Add at the beginning of the list
+        n->next = list->head;
+        list->head = n;
+}
+//
+// Returns true if the value exists in the list.
+//
+int llist_exists(LinkedList * list, int value) {
+        ListNode *p;
+        p = list->head;
+        while(p != NULL){
+                if((p->value)==value){
+                        //found it
+                        return 1;
+                }
+                p = p->next;
+        }
+        //outside the while loop means we have reached the end and still not found the value
+        return 0;
+}
+//
+// It removes the entry with that value in the list.
+//
+int llist_remove(LinkedList * list, int value) {
+        ListNode *p = list->head;
+        //prev points to the previous entry
+        ListNode *prev = NULL;
+        //find the entry to remove
+        while(p != NULL){
+                if((p->value)==value){
+                        //found;
+                        break;
+                }
+                prev = p;
+                p = p->next;
+        }
+        if(p == NULL){
+                //element does not exist
+                return 0;
+        }
+        //now the entry pointed by p has the value we are looking for and prev points to the element before p
+
+        //first case: p is the first element. so prev points to NULL
+        if(prev == NULL){
+                list->head = p->next;
+        }else{
+                //second case: p is an internal node (including the last node)
+                prev->next = p->next;
+        }
+        //we have skipped the element but we haven't remove it
+        free(p);
+        return 1;
+}
+//
+// It stores in *value the value that correspond to the ith entry.
+// It returns 1 if success or 0 if there is no ith entry.
+//
+int llist_get_ith(LinkedList * list, int ith, int * value) {
+        ListNode *p;
+        p = list->head;
+        int i = 0;
+        while(p!=NULL){
+                if(i==ith){
+                        *value = p->value;
+                        return 1;
+                }
+                i++;
+                p = p->next;
+        }
+        return 0;
+}
+//
+// It removes the ith entry from the list.
+// It returns 1 if success or 0 if there is no ith entry.
+//
+int llist_remove_ith(LinkedList * list, int ith) {
+        ListNode *p;
+        p = list->head;
+        ListNode *prev = NULL;
+        int i = 0;
+        while(p!=NULL){
+                if(i==ith){
+                        break;
+                }
+                i++;
+                prev = p;
+                p = p->next;
+        }
+        if(p == NULL){
+                //element does not exist
+                return 0;
+        }
+        //now the entry pointed by p is the ith node we are looking for and prev points to the element before p
+
+        //first case: p is the first element. so prev points to NULL
+        if(prev == NULL){
+                list->head = p->next;
+        }else{
+                //second case: p is an internal node (including the last node)
+                prev->next = p->next;
+        }
+        //we have skipped the element but we haven't remove it
+        free(p);
+        return 1;
+}
+//
+// It returns the number of elements in the list.
+//
+int llist_number_elements(LinkedList * list) {
+        ListNode *p;
+        p = list->head;
+        int num = 0;
+        while(p!=NULL){
+                num++;
+                p = p->next;
+        }
+        return num;
+}
+//
+// It saves the list in a file called file_name. The format of the
+// file is as follows:
+//
+// value1\n
+// value2\n
+// ...
+//
+int llist_save(LinkedList * list, char * file_name) {
+        FILE * fd;
+        fd=fopen(file_name, "w");
+        if(fd==NULL){
+                return 0;
+        }
+        ListNode * e;
+        if (list->head == NULL) {
+                fprintf(fd, "{EMPTY}\n");
+                return 0;
+        }
+        e = list->head;
+        while (e != NULL) {
+                fprintf(fd, "%d\n", e->value);
+                e = e->next;
+        }
+        fclose(fd);
+        return 0;
+}
+//
+// It reads the list from the file_name indicated. If the list already has entries, 
+// it will clear the entries.
+//
+int llist_read(LinkedList * list, char * file_name) {
+        FILE *fd;
+        fd=fopen(file_name, "r");
+        if(fd==NULL){
+                return 0;
+        }
+        ListNode *a = list->head;
+        ListNode *b;
+        if((list->head)!=NULL){
+                while(a!=NULL){
+                        b = a;
+                        a = a->next;
+                        free(b);
+                }
+        }
+        ListNode *p = malloc(sizeof(ListNode));
+        list->head = p;
+        int c;
+        int array[100000];
+        int i = 0;
+        while(c=fscanf(fd, "%d", &(array[i])), c>0){
+                i++;
+        }
+        for(int j = i-1; j >0; j--){
+                int val = array[j];
+                p->value = val;
+                ListNode *n = malloc(sizeof(ListNode));
+                p->next = n;
+                p = n;
+        }
+        p->value = array[0];
+        p->next = NULL;
+        fclose(fd);
+        return 1;
+}
+//
+// It sorts the list. The parameter ascending determines if the
+// order si ascending (1) or descending(0).
+//
+void llist_sort(LinkedList * list, int ascending) {
+        ListNode *p = list->head;
+        ListNode *temp = p->next;
+        if(ascending==1){
+                while(p!=NULL){
+                        while(temp!=NULL){
+                                if((temp->value)<(p->value)){
+                                        int tempVal = temp->value;
+                                        temp->value = p->value;
+                                        p->value = tempVal;
+                                }
+                                temp = temp->next;
+                        }
+                        if((p->next)==NULL){
+                                break;
+                        }
+                        p = p->next;
+                        temp = p->next;
+                }
+        }else if(ascending==0){
+                while(p!=NULL){
+                        while(temp!=NULL){
+                                if((temp->value)>(p->value)){
+                                        int tempVal = temp->value;
+                                        temp->value = p->value;
+                                        p->value = tempVal;
+                                }
+                                temp = temp->next;
+                        }
+                        if((p->next)==NULL){
+                                break;
+                        }
+                        p = p->next;
+                        temp = p->next;
+                }
+        }
+}
+//
+// It removes the first entry in the list and puts value in *value.
+// It also frees memory allocated for the node
+//
+int llist_remove_first(LinkedList * list, int * value) {
+        if((list->head)==NULL){
+                return 0;
+        }
+        ListNode *p = list->head;
+        *value = p->value;
+        list->head = p->next;
+        free(p);
+        return 1;
+}
+//
+// It removes the last entry in the list and puts value in *value/
+// It also frees memory allocated for node.
+//
+int llist_remove_last(LinkedList * list, int *value) {
+  ListNode *p = list->head;
+  if((list->head)==NULL){
+        return 0;
+  }
+  while((p->next->next)!=NULL){
+        p = p->next;
+  }
+  *value = p->next->value;
+  free(p->next);
+  p->next = NULL;
+  return 1;
+}
+//
+// Insert a value at the beginning of the list.
+// There is no check if the value exists. The entry is added
+// at the beginning of the list.
+//
+void llist_insert_first(LinkedList * list, int value) {
+         // Create new node
+        ListNode * n = (ListNode *) malloc(sizeof(ListNode));
+        n->value = value;
+
+        // Add at the beginning of the list
+        n->next = list->head;
+        list->head = n;
+}
+//
+// Insert a value at the end of the list.
+// There is no check if the name already exists. The entry is added
+// at the end of the list.
+//
+void llist_insert_last(LinkedList * list, int value) {
+        ListNode *p = list->head;
+        while((p->next)!=NULL){
+                p = p->next;
+        }
+        ListNode *n = (ListNode*)malloc(sizeof(ListNode));
+        p->next = n;
+        n->value = value;
+}
+//
+// Clear all elements in the list and free the nodes
+//
+void llist_clear(LinkedList *list){
+        ListNode *p = list->head;
+        ListNode *n;
+        while(p!=NULL){
+                n = p->next;
+                if(n == NULL){
+                  list->head = NULL;
+                }
+                free(p);
+                p = n;
+        }
+        free(p);
+}
+
+
+#-------------------
+#ptr-simple.c
+
+#include <stdio.h>
+int a;
+int *p;
+int b[20];
+int main() {
+  a=5;
+  p=&a;
+  printf("a=5\n");
+  printf("p=&a\n");
+  printf("a=%d\n",a);
+  printf("&a=%ld\n",(long)&a);
+  printf("p=%ld\n",(long)p);
+  printf("&p=%ld\n",(long)&p);
+  printf("*p=%d\n",*p);
+  printf("\n");
+  p=&b[0];
+  printf("&b[0]=%ld\n",(long)&b[0]);
+  printf("p=%ld\n\n",(long)p);
+  p++;
+  printf("p++\n");
+  printf("&b[1]=%ld\n",(long)&b[1]);
+  printf("p=%ld\n\n",(long) p);
+  p++;
+  printf("p++\n");
+  printf("&b[2]=%ld\n",(long) &b[2]);
+  printf("p=%ld\n\n",(long)p);
+}
+
+
+#---------------------------------
+#simple_list.c
+
+#include <stdlib.h>
+#include <stdio.h>
+// Simple list of integers
+struct ListNode {
+  int value;
+  struct ListNode *next;
+};
+typedef struct ListNode ListNode;
+struct ListNode *head = NULL;
+void addFront(int val) {
+        // Create new node
+        ListNode * n = (ListNode *) malloc(sizeof(ListNode));
+        n->value = val;
+        // Add at the beginning of the list
+        n->next = head;
+        head = n;
+}
+void printList() {
+        // Traverse list ad print elements
+        printf("---List---\n");
+        ListNode * n = head;
+        while (n!=NULL) {
+                printf("%d\n", n->value);
+                n = n->next;
+        }
+}
+int main(){
+        addFront(5);
+        addFront(6);
+        addFront(8);
+        addFront(1);
+        addFront(2);
+        printList();
+}
