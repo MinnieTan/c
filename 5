@@ -1,0 +1,492 @@
+#array.h
+// Return sum of the array
+double sumArray(int n, double * array);
+// Return maximum element of array
+double maxArray(int n, double * array);
+// Return minimum element of array
+double minArray(int n, double * array);
+// Find the position int he array of the first element x 
+// such that min<=x<=max or -1 if no element was found
+int findArray(int n, double * array, double min, double max);
+// Sort array without using [] operator. Use pointers 
+// Hint: Use a pointer to the current and another to the next element
+int sortArray(int n, double * array);
+// Print array
+void printArray(int n, double * array);
+
+
+#-----------------------------
+#array.c
+
+#include <stdio.h>
+#include "array.h"
+// Return sum of the array
+double sumArray(int n, double * array) {
+        double sum = 0;
+        for(int i = 0; i < n; i++){
+                sum = sum + *(array+i);
+        }
+        return sum;
+}
+// Return maximum element of array
+double maxArray(int n, double * array) {
+        double max = *array;
+        for(int i = 1; i < n; i++){
+                if(*(array+i)>max){
+                        max = *(array+i);
+                }
+        }
+        return max;
+}
+// Return minimum element of array
+double minArray(int n, double * array) {
+        double min = *(array);
+        for(int i = 0; i < n; i++){
+                if(*(array+i)<min){
+                        min = *(array+i);
+                }
+        }
+        return min;
+}
+// Find the position int he array of the first element x 
+// such that min<=x<=max or -1 if no element was found
+int findArray(int n, double * array, double min, double max) {
+  //loop through array
+  for(int i = 0; i < n; i++){
+        //check if min<=x<=max
+        if((min<=*array)&&(*array<=max)){
+                return i;
+        }
+        array++;
+  }
+  return -1;
+}
+// Sort array without using [] operator. Use pointers 
+// Hint: Use a pointer to the current and another to the next element
+int sortArray(int n, double * array) {
+        double temp = 0;
+        int i = 0;
+        int j = 0;
+        for(i = 0; i < (n-1); i++){
+                for(j = 0; j < (n-i-1); j++){
+                        if(array[j]>array[j+1]){
+                                temp = array[j];
+                                array[j] = array[j+1];
+                                array[j+1] = temp;
+                        }
+                }
+        }
+}
+// Print array
+void printArray(int n, double * array) {
+        //loop through every double
+        for(int i = 0; i < n; i++){
+                printf("%d:%lf\n", i, *array);
+                array++;
+        }
+}
+
+
+#---------------------------
+#endian.c
+
+#include <stdio.h>
+  int isLittleEndian() {
+ int a = 0x05;
+ char * p = (char *) &a;
+ if (*p==0x05) {
+   return 1;
+ }
+ return 0;
+}
+void main(){
+ if (isLittleEndian()) {
+   printf("Machine is Little Endian\n");
+ }
+ else {
+   printf("Machine is Big Endian\n");
+ }
+}
+
+
+#---------------------------------------
+#hintdump.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void mymemdump(FILE * fd, char * p , int len) {
+    int i;
+    fprintf(fd, "0x%016lX: ", (unsigned long) p); // Print address of the beginning of p. You need to print it every 16 bytes
+    for (i=0; i < len; i++) {
+        int c = p[i]&0xFF; // Get value at [p]. The &0xFF is to make sure you truncate to 8bits or one byte.
+        // Print first byte as hexadecimal
+        fprintf(fd, "%02X ", c);
+        // Print first byte as character. Only print characters >= 32 that are the printable characters.
+        fprintf(fd, "%c ", (c>=32)?c:'.');
+       if (i % 16 == 0 ) {
+        fprintf(fd,"\n");
+      }
+    }
+}
+main() {
+    char a[30];
+    int x;
+    x = 5;
+    strcpy(a,"Hello world\n");
+    mymemdump(stdout,(char*) &x, 64);
+}
+
+
+#-----------------------------------------
+#mem.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void mymemdump(FILE *fd, char * p , int len);
+struct X{
+  char a;
+  int i;
+  char b;
+  int *p;
+};
+struct List {
+  char * str;
+  struct List * next;
+};
+int main() {
+  char str[20];
+  int a = 5;
+  int b = -5;
+  double y = 12;
+  struct X x;
+  struct List * head;
+  x.a = 'A';
+  x.i = 9;
+  x.b = '0';
+  x.p = &x.i;
+  strcpy(str, "Hello world\n");
+  //print the address 
+  printf("&str=0x%lX\n", (unsigned long)&str);
+  printf("&a=0x%lX\n", (unsigned long)&a);
+  printf("&b=0x%lX\n", (unsigned long)&b);
+  printf("&y=0x%lX\n", (unsigned long) &y);
+  printf("&x.a=0x%lX\n", (unsigned long)&x.a);
+  printf("&x.i=0x%lx\n", (unsigned long)&x.i);
+  printf("&x.b=0x%lx\n", (unsigned long)&x.b);
+  printf("&x.p=0x%lx\n", (unsigned long)&x.p);
+  //print the value
+  printf("str=%s\n", str);
+  printf("a=%d\n", a);
+  printf("b=%d\n", b);
+  printf("y=%lf\n", y);
+  printf("x.a=%d\n", x.a);
+  printf("x.i=%d\n", x.i);
+  printf("x.b=%d\n", x.b);
+  printf("x.p=%d\n", *x.p);
+  //the output of a, b, and y
+  mymemdump(stdout, (char *) &a, 32);
+  printf("\n");
+  //output of x.a, x.i, x.b and x.p
+  mymemdump(stdout, (char *) &x.a, 64);
+  head = (struct List *) malloc(sizeof(struct List));
+  head->str=strdup("Welcome ");
+  head->next = (struct List *) malloc(sizeof(struct List));
+  head->next->str = strdup("to ");
+  head->next->next = (struct List *) malloc(sizeof(struct List));
+  head->next->next->str = strdup("cs250");
+  head->next->next->next = NULL;
+  printf("head=0x%lx\n", (unsigned long) head);
+    //output of the head
+  mymemdump(stdout, (char*) &head, 32);
+  printf("\n");
+  //output of head->str and the rest
+  mymemdump(stdout, (char*) head, 256);
+  //print the address of head, and the rest
+  printf("&head=0x%lx\n", (unsigned long) &head);
+  printf("&head->str=0x%lX\n", (unsigned long)&head->str);
+  printf("&head->next=0x%lx\n", (unsigned long)&head->next);
+  printf("&head->next->str=0x%lx\n", (unsigned long)&head->next->str);
+  printf("&head->next->next=0x%lx\n", (unsigned long)&head->next->next);
+  printf("&head->next->next->str=0x%lx\n", (unsigned long) &head->next->next->str);
+  printf("&head->next->next->next=0x%lX\n", (unsigned long)&head->next->next->next);
+  //print the value of the str
+  printf("head->str=%s\n", head->str);
+  printf("head->next->str=%s\n", head->next->str);
+  printf("head->next->next->str=%s\n", head->next->next->str);
+}
+
+
+#-----------------------------------------------------------------
+#myfiledump.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void filedump(char * p , int len) {
+        for(int i = 0; i < len; i++){
+                // Print address of the beginning of p. You need to print it every 16 bytes
+                printf("0x%016lX: ", (unsigned long) (&p[i]-&p[0]));
+                // Get value at [p]. The &0xFF is to make sure you truncate to 8bits or one byte.
+                int c = p[i]&0xFF;
+                //print bytes as hexadecimal
+                for(int j = i; j < i+16; j++){
+                        if(j<len){
+                                int d = p[j]&0xFF;
+                                printf("%02X ", d);
+                        }else{
+                                printf("   ");
+                        }
+                }
+                printf(" ");
+                //print bytes as character
+                for(int j = i; (j < i+16)&&(j < len); j++){
+                        int d = p[j]&0xFF;
+                        printf("%c", (d>=32&&d<127)?d:'.');
+                }
+                printf("\n");
+                i = i+15;
+        }
+}
+int main(int argc, char **argv) {
+        if(argc < 2){
+                printf("Usage: myfiledump filename [maxbytes]\n");
+                exit(1);
+        }
+        char *fileName = argv[1];
+        FILE *fin = fopen(fileName, "r");
+        if(fin==NULL){
+                printf("Error opening file \"%s\"\n", fileName);
+                exit(1);
+        }
+        int maxBytes = 0;
+        fseek(fin, 0L, SEEK_END);
+        int fileSize = ftell(fin);
+        fseek(fin, 0L, SEEK_SET);
+        if(argc==3){
+                int bytes = atoi(argv[2]);
+                if(bytes > fileSize){
+                        maxBytes = fileSize;
+                }else{
+                        maxBytes = bytes;
+                }
+        }else{
+                maxBytes = fileSize;
+        }
+        char *wholeFile = (char *)malloc(maxBytes*(sizeof(char)));
+        fread(wholeFile, maxBytes+1, 1, fin);
+        filedump(wholeFile, maxBytes);
+        return 1;
+}
+
+
+#----------------------
+#mymemdump.c
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void mymemdump(FILE * fd, char * p , int len) {
+    // Add your code here.
+    // You may see p as an array.
+    // p[0] will return the element 0 
+    // p[1] will return the element 1 and so on
+    for(int i = 0; i < len; i++){
+        // Print address of p[i].
+        fprintf(fd, "0x%016lX: ", (unsigned long) &p[i]);
+        // Get value at p[i].
+        int c = p[i]&0xFF;
+        //print bytes as hexadecimal
+        for(int j = i; j < i+16; j++){
+                if(j<len){
+                        int d = p[j]&0xFF;
+                        fprintf(fd, "%02X ", d);
+                }else{
+                        fprintf(fd, "   ");
+                }
+        }
+        fprintf(fd, " ");
+        //print bytes as character
+        for(int j = i; (j < i+16)&&(j < len); j++){
+                int d = p[j]&0xFF;
+                fprintf(fd, "%c", (d>=32&&d<127)?d:'.');
+        }
+        fprintf(fd, "\n");
+        i = i+15;
+    }
+}
+
+
+#-------------------
+#mystring.h
+#if !defined MYSTRING_H
+#define MYSTRING_H
+int mystrlen(char * s);
+char * mystrcpy(char * dest, char * src);
+char * mystrcat(char * dest, char * src);
+int mystrcmp(char * s1, char * s2);
+char * mystrstr(char * hay, char * needle);
+char * mystrdup(char * s);
+char * mymemcpy(char * dest, char * src, int n);
+
+#endif
+
+
+#-------------------
+#mystring.c
+
+#include <stdlib.h>
+#include "mystring.h"
+int mystrlen(char * s) {
+        int i = 0;
+        //count
+        while(*s){
+                i++;
+                s++;
+        }
+        return i;
+}
+char * mystrcpy(char * dest, char * src) {
+        char *p = src;
+        char *q = dest;
+        //copy
+        while(*p != '\0'){
+                *q = *p;
+                p++;
+                q++;
+        }
+        *q = '\0';
+        return dest;
+}
+char * mystrcat(char * dest, char * src) {
+        char *p;
+        char *q;
+        //p points to end of dest
+        p = dest;
+        while(*p){
+                p++;
+        }
+        q = src;
+        //copy from *q to *p
+        while(*q){
+                *p = *q;
+                p++;
+                q++;
+        }
+        *p = '\0';
+        return dest;
+}
+int mystrcmp(char * s1, char * s2) {
+        int s1len = mystrlen(s1);
+        int s2len = mystrlen(s2);
+        //if s1 is longer or s1 and s2 have the same length
+        if((s1len>s2len)||(s1len==s2len)){
+                while(*s1){
+                        if(*s1>*s2){
+                                return 1;
+                        }else if(*s1<*s2){
+                                return -1;
+                        }
+                        if((*s2 == '\0')||(*s2 == '\n')){
+                                return -1;
+                        }
+                        s1++;
+                        s2++;
+                }
+        }else{ //if s2 is longer
+                while(*s2){
+                        if(*s1>*s2){
+                                return 1;
+                        }else if(*s1<*s2){
+                                return -1;
+                        }
+                        if((*s1 == '\0')||(*s1 == '\n')){
+                                return -1;
+                        }
+                        s1++;
+                        s2++;
+                }
+        }
+        return 0;
+}
+char * mystrdup(char * s) {
+        int len = mystrlen(s);
+        //malloc
+        char *s1 = (char*)malloc(len+1);
+        //copy
+        mystrcpy(s1, s);
+        return s1;
+}
+char * mystrstr(char * hay, char * needle) {
+        int haylen = mystrlen(hay);
+        int needlelen = mystrlen(needle);
+        //loop through hay
+        for(int i = 0; i < haylen; i++){
+                int n = 0;
+                //if the char is equal to needle[0]
+                if(*(hay+i) == *needle){
+                        //loop through needle
+                        while(*(needle+n) != '\0'){
+                                //if the chars are all the same, increment n
+                                if(*(hay+i+n) == *(needle+n)){
+                                        n++;
+                                }else{ //if not all the same, stop
+                                        break;
+                                }
+                        }
+                        // if all the chars are the same
+                        if(n == needlelen){
+                                return (hay+i);
+                        }
+                }
+        }
+        return NULL;
+}
+char * mymemcpy(char * dest, char * src, int n){
+        char *p = src;
+        char *q = dest;
+        //copy n chars
+        for(int i = 0; i < n; i++){
+                *q = *p;
+                p++;
+                q++;
+        }
+        *q = '\0';
+        return dest;
+}
+
+
+#-----------------------
+#sections.c
+
+#include <stdio.h>
+  
+#include <stdlib.h>
+
+int a=5;
+
+int buffer[1000000];
+
+int foo() {
+
+  int d;
+
+  static int e = 5;
+
+  printf("&d=%p &le=%p\n", &d, &e);
+
+}
+int main(){
+  int b;
+  static int c;
+  int * p = (int *) malloc(sizeof(int));
+  char * str = "Hello World\n";
+  printf("&a=%p\n", &a);
+  printf("&b=%p &c=%p\n", &b, &c);
+  printf("&p=%p p=%p\n", &p, p);
+  printf("&str=%p str=%p\n", &str, str);
+  foo();
+  printf("main=%p &foo=%p\n", main, &foo);
+}
+
